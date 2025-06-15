@@ -1,0 +1,237 @@
+<!-- <!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Tuti Fruti Online</title>
+</head>
+<body>
+  <h1>Tuti Fruti Online</h1>
+  <button onclick="crearSala()">Crear Sala</button>
+  <input id="codigoSala" placeholder="Código de sala">
+  <button onclick="unirseSala()">Unirse</button>
+
+  <div id="juego" style="display:none;">
+    <h2>Letra: <span id="letra"></span></h2>
+    <form id="formulario">
+      <input name="nombre" placeholder="Nombre"><br>
+      <input name="animal" placeholder="Animal"><br>
+      <input name="fruta" placeholder="Fruta"><br>
+      <input name="pais" placeholder="País"><br>
+      <button type="submit">Enviar</button>
+    </form>
+  </div>
+
+  <div id="resultado"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Tuti Fruti Online</title>
+</head>
+
+<style>
+  /* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  min-height: 100vh;
+  padding: 20px;
+  color: #333;
+}
+
+h1, h2, h3 {
+  text-align: center;
+  margin-bottom: 1em;
+  color: #333;
+}
+
+/* Contenedor principal */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Formulario tipo tabla */
+form table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+form th, form td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: center;
+  font-size: 1rem;
+}
+
+form th {
+  background-color: #ffb347;
+  color: white;
+  text-transform: uppercase;
+}
+
+form input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #ffa07a;
+  border-radius: 8px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+form input[type="text"]:focus {
+  outline: none;
+  border-color: #ff6347;
+  background-color: #fff8f5;
+}
+
+/* Botones */
+button,
+input[type="submit"] {
+  background-color: #ff6347;
+  border: none;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin: 5px;
+}
+
+button:hover,
+input[type="submit"]:hover {
+  background-color: #e5533d;
+}
+
+/* Mensajes de estado */
+#letra {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #ff6347;
+  text-align: center;
+  margin: 20px 0;
+}
+
+#resultado {
+  background-color: #f5f5f5;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+/* Tabla de resultados */
+#resultado ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+#resultado li {
+  margin: 5px 0;
+}
+
+/* Lista de salas */
+#listaSalas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.sala {
+  background-color: #fff2e6;
+  border: 2px solid #ffa07a;
+  padding: 12px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Responsive */
+@media screen and (max-width: 600px) {
+  form th, form td {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+
+  button,
+  input[type="submit"] {
+    font-size: 0.9rem;
+    padding: 10px 15px;
+  }
+}
+
+</style>
+<body>
+  <div class="container">
+
+    <h1>Tuti Fruti Online</h1>
+  
+    <div id="inicio">
+      <input id="nombreJugador" placeholder="Tu nombre">
+      <button onclick="ingresar()">Entrar</button>
+    </div>
+  
+    <div id="menu" style="display:none;">
+      <button onclick="crearSala()">Crear Sala</button>
+      <h3>Salas Disponibles:</h3>
+      <div id="listaSalas"></div>
+      <input id="codigoSala" placeholder="Código manual">
+      <button onclick="unirsePorCodigo()">Unirse</button>
+    </div>
+  
+    <div id="juego" style="display:none;">
+      <h2>Letra: <span id="letra"></span></h2>
+      <form id="formulario">
+        <table>
+          <tr>
+            <td><input name="nombre" placeholder="Nombre"></td>
+            <td><input name="animal" placeholder="Animal"></td>
+          </tr>
+          <tr>
+            <td><input name="fruta" placeholder="Fruta"></td>
+            <td><input name="pais" placeholder="País"></td>
+          </tr>
+          <tr>
+            <td colspan="2" style="text-align:center;">
+              <button type="submit">Basta para mi basta para todos</button>
+            </td>
+          </tr>
+        </table>
+      </form>
+      <p id="esperando" style="color: gray;"></p>
+      <button id="btnIniciarJuego" style="display:none;">Iniciar Juego</button>
+    </div>
+    <div id="salaActual" style="display: none;">
+      <h2>Sala <span id="salaCodigo"></span></h2>
+      <p>Jugadores conectados:</p>
+      <ul id="listaJugadores"></ul>
+    
+    </div>
+    <div id="resultado"></div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>
