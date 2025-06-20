@@ -35,9 +35,23 @@
 <head>
   <meta charset="UTF-8">
   <title>Tuti Fruti Online</title>
+
+  <!-- Íconos FontAwesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<!-- Música de fondo -->
+<audio id="musicaFondo" loop autoplay>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_825243b338.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Sonido de cuenta regresiva -->
+<audio id="sonidoContador">
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/25/audio_6cb99ee8f5.mp3" type="audio/mpeg">
+</audio>
+
 </head>
 
-<style>
+<!-- <style>
   /* Reset básico */
 * {
   margin: 0;
@@ -181,7 +195,237 @@ input[type="submit"]:hover {
   }
 }
 
+ #botonIniciarContainer button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  #botonIniciarContainer button:hover {
+    background-color: #45a049;
+  }
+
+</style> -->
+
+<style>
+  /* RESET GENERAL */
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+  }
+
+  body {
+    background: linear-gradient(135deg, #ffe0ec, #c1f0f6);
+    min-height: 100vh;
+    padding: 20px;
+    color: #444;
+  }
+
+  h1, h2, h3 {
+    text-align: center;
+    color: #ff4081;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-size: 3rem;
+    animation: aparecer 1s ease-in-out;
+  }
+
+  @keyframes aparecer {
+    from { opacity: 0; transform: scale(0.8); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* CONTENEDOR PRINCIPAL */
+  .container {
+    max-width: 850px;
+    margin: auto;
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    animation: slideIn 0.6s ease-out;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* FORMULARIO */
+  form table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 15px;
+  }
+
+  form td {
+    text-align: center;
+  }
+
+  form input[type="text"] {
+    width: 100%;
+    padding: 14px;
+    border: 3px solid #ff90bb;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  form input[type="text"]:focus {
+    background-color: #fff0f5;
+    border-color: #ff4081;
+    outline: none;
+    transform: scale(1.05);
+  }
+
+  /* BOTONES */
+  button, input[type="submit"] {
+    background-color: #ff4081;
+    color: white;
+    padding: 14px 25px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  button:hover, input[type="submit"]:hover {
+    background-color: #e73370;
+    transform: scale(1.05);
+  }
+
+  /* LETRA */
+  #letra {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #ff4081;
+    text-align: center;
+    margin: 20px 0;
+    animation: zoomIn 0.5s ease-out;
+  }
+
+  @keyframes zoomIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  /* CUENTA REGRESIVA */
+  #cuentaRegresiva {
+    font-size: 4rem;
+    font-weight: bold;
+    color: #ff4081;
+    text-align: center;
+    margin-bottom: 20px;
+    animation: blink 1s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* RESULTADOS */
+  #resultado {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #ffeef4;
+    border: 2px dashed #ff90bb;
+    border-radius: 15px;
+  }
+
+  #resultado h3 {
+    color: #ff4081;
+    margin-bottom: 15px;
+  }
+
+  #resultado p {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+  }
+
+  #resultado ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 15px;
+  }
+
+  #resultado li::before {
+    content: "⭐ ";
+    color: #ffb347;
+  }
+
+  #listaSalas {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .sala {
+    background-color: #fff7fb;
+    border: 2px solid #ffa8c5;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #botonIniciarContainer button {
+    background-color: #4caf50;
+    font-size: 1.1rem;
+    padding: 12px 24px;
+    margin-top: 10px;
+  }
+
+  #botonIniciarContainer button:hover {
+    background-color: #43a047;
+  }
+
+  /* RESPONSIVE */
+  @media screen and (max-width: 600px) {
+    form input[type="text"], button {
+      font-size: 1rem;
+    }
+
+    #letra {
+      font-size: 2.2rem;
+    }
+
+    #cuentaRegresiva {
+      font-size: 2.5rem;
+    }
+  }
+
+  form input[type="text"] {
+  width: 100%;
+  padding: 18px 12px;      /* Más alto y cómodo para dedos pequeños */
+  border: 3px solid #ffa07a; /* Borde un poco más grueso y color suave */
+  border-radius: 12px;     /* Más redondeado */
+  font-size: 1.5rem;       /* Texto más grande */
+  text-align: center;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+form input[type="text"]:focus {
+  outline: none;
+  border-color: #ff6347;   /* Color más fuerte al enfocar */
+  box-shadow: 0 0 8px rgba(255, 99, 71, 0.7); /* Luz suave alrededor */
+  background-color: #fff8f5;
+}
 </style>
+
+
 <body>
   <div class="container">
 
@@ -202,6 +446,9 @@ input[type="submit"]:hover {
   
     <div id="juego" style="display:none;">
       <h2>Letra: <span id="letra"></span></h2>
+
+       <div id="cuentaRegresiva" style="font-size: 3rem; text-align: center; color: #ff6347; margin-bottom: 20px;"></div>
+
       <form id="formulario">
         <table>
           <tr>
@@ -220,18 +467,60 @@ input[type="submit"]:hover {
         </table>
       </form>
       <p id="esperando" style="color: gray;"></p>
-      <button id="btnIniciarJuego" style="display:none;">Iniciar Juego</button>
+      <!-- <button id="btnIniciarJuego" style="display:none;">Iniciar Juego</button> -->
     </div>
-    <div id="salaActual" style="display: none;">
-      <h2>Sala <span id="salaCodigo"></span></h2>
-      <p>Jugadores conectados:</p>
-      <ul id="listaJugadores"></ul>
-    
-    </div>
+  <div id="salaActual" style="display: none;">
+    <h2>Sala <span id="salaCodigo"></span></h2>
+    <p>Jugadores conectados:</p>
+    <ul id="listaJugadores"></ul>
+  
+  <!-- Contenedor para el botón de iniciar -->
+    <div id="botonIniciarContainer"></div>
+  </div>
     <div id="resultado"></div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="client.js"></script>
+  <audio id="musicaFondo" src="musica.mp3" loop></audio>
+<audio id="sonidoContador" src="beep.mp3"></audio>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const musica = document.getElementById('musicaFondo');
+    const sonidoContador = document.getElementById('sonidoContador');
+
+    musica.volume = 1.0; // Aunque 10 es demasiado, el máximo válido es 1.0
+
+    document.body.addEventListener("click", () => {
+      musica.play().catch((err) => {
+        console.warn("No se pudo reproducir automáticamente:", err);
+      });
+    }, { once: true });
+
+    function iniciarCuentaRegresiva(callback = () => {}) {
+      const contador = document.getElementById('cuentaRegresiva');
+      let segundos = 3;
+
+      sonidoContador.play();
+
+      const interval = setInterval(() => {
+        contador.textContent = segundos;
+        contador.style.color = ['#ff4081', '#ff9800', '#4caf50'][3 - segundos];
+        segundos--;
+
+        if (segundos < 0) {
+          clearInterval(interval);
+          contador.textContent = '';
+          callback();
+        }
+      }, 1000);
+    }
+
+    // Ahora sí, podés usar iniciarCuentaRegresiva()
+    // Por ejemplo:
+    // iniciarCuentaRegresiva(() => { document.getElementById('formulario').style.display = 'block'; });
+  });
+</script>
 </body>
 </html>

@@ -60,12 +60,7 @@ socket.on('salaCreada', (id) => {
   alert('Sala creada: ' + id);
   socket.emit('unirseSala', id); // auto-unirse
  // mostrarBotonIniciar();
-  if (soyCreador) {
-    // Mostrar botón iniciar juego
-    document.getElementById('btnIniciarJuego').style.display = 'block';
-  } else {
-    document.getElementById('btnIniciarJuego').style.display = 'none';
-  }
+  
 });
 
 
@@ -75,9 +70,12 @@ socket.on('jugadoresListos', (data) => {
   document.getElementById('menu').style.display = 'none';
   document.getElementById('juego').style.display = 'block';
   document.getElementById('letra').textContent = letra;
-  document.getElementById('formulario').style.display = 'block';
+  // document.getElementById('formulario').style.display = 'block';
+  iniciarCuentaRegresiva();
   document.getElementById('esperando').textContent = '';
-  document.getElementById('iniciarBtn')?.remove(); // borrar botón iniciar si está
+  // document.getElementById('iniciarBtn')?.remove(); // borrar botón iniciar si está
+   const btn = document.getElementById('iniciarBtn');
+  // if (btn) btn.style.display = 'none';
 });
 
 // Esperando jugadores
@@ -99,20 +97,69 @@ document.getElementById('formulario').addEventListener('submit', (e) => {
     pais: form.pais.value
   };
   socket.emit('respuestas', { roomId, respuestas });
+  form.reset(); 
   document.getElementById('esperando').textContent = 'Esperando al resto de jugadores...';
 });
 
 // Mostrar resultados
+// socket.on('mostrarResultados', (resultado) => {
+//   const div = document.getElementById('resultado');
+
+//   // Si resultado viene del multi-jugador:
+//   if (resultado.resultado && resultado.totales) {
+//     const jugadores = Object.keys(resultado.resultado);
+//     let html = `<h3>Resultados:</h3>`;
+//     jugadores.forEach((id, i) => {
+//       html += `
+//         <p><strong>Jugador ${i + 1} (${id}):</strong> ${resultado.totales[id]} puntos</p>
+//         <ul>
+//           ${Object.entries(resultado.resultado[id]).map(([cat, val]) =>
+//             `<li>${cat}: ${val.valor} (${val.puntos} pts)</li>`).join('')}
+//         </ul>
+//       `;
+//     });
+//     div.innerHTML = html;
+//   } else {
+//     // Resultado para 2 jugadores
+//     div.innerHTML = `
+//       <h3>Resultados:</h3>
+//       <p><strong>Jugador 1:</strong> ${resultado.total1} puntos</p>
+//       <ul>
+//         ${Object.entries(resultado.jugador1).map(([cat, val]) =>
+//           `<li>${cat}: ${val.valor} (${val.puntos} pts)</li>`).join('')}
+//       </ul>
+//       <p><strong>Jugador 2:</strong> ${resultado.total2} puntos</p>
+//       <ul>
+//         ${Object.entries(resultado.jugador2).map(([cat, val]) =>
+//           `<li>${cat}: ${val.valor} (${val.puntos} pts)</li>`).join('')}
+//       </ul>
+//     `;
+//   }
+
+
+//   document.getElementById('juego').style.display = 'none';
+//   document.getElementById('salaActual').style.display = 'block';
+
+
+//   if (soyCreador) {
+//     console.log('¿Soy el creador?', soyCreador);
+//     console.log('Llamando a mostrarBotonIniciar()');
+//     mostrarBotonIniciar('Nueva Ronda');
+//   }
+// });
+
+
 socket.on('mostrarResultados', (resultado) => {
   const div = document.getElementById('resultado');
+  const nombres = resultado.nombresJugadores || {};
 
-  // Si resultado viene del multi-jugador:
   if (resultado.resultado && resultado.totales) {
     const jugadores = Object.keys(resultado.resultado);
     let html = `<h3>Resultados:</h3>`;
     jugadores.forEach((id, i) => {
+      const nombreJugador = nombres[id] || `Jugador ${i + 1}`;
       html += `
-        <p><strong>Jugador ${i + 1} (${id}):</strong> ${resultado.totales[id]} puntos</p>
+        <p><strong>${nombreJugador} (${id}):</strong> ${resultado.totales[id]} puntos</p>
         <ul>
           ${Object.entries(resultado.resultado[id]).map(([cat, val]) =>
             `<li>${cat}: ${val.valor} (${val.puntos} pts)</li>`).join('')}
@@ -121,7 +168,7 @@ socket.on('mostrarResultados', (resultado) => {
     });
     div.innerHTML = html;
   } else {
-    // Resultado para 2 jugadores
+    // Adaptar también si usás esa otra forma de resultado para 2 jugadores (si aplica)
     div.innerHTML = `
       <h3>Resultados:</h3>
       <p><strong>Jugador 1:</strong> ${resultado.total1} puntos</p>
@@ -136,16 +183,21 @@ socket.on('mostrarResultados', (resultado) => {
       </ul>
     `;
   }
+
+  document.getElementById('juego').style.display = 'none';
+  document.getElementById('salaActual').style.display = 'block';
+
+  if (soyCreador) {
+    mostrarBotonIniciar('Nueva Ronda');
+  }
 });
+
 
 socket.on('errorSala', (mensaje) => {
   alert(mensaje);
 });
 
 
-
-
-// Ejemplo (client.js)
 socket.on('infoSala', (data) => {
   // data puede traer info de la sala, jugadores y quien es el creador
   document.getElementById('salaCodigo').textContent = data.codigoSala;
@@ -183,11 +235,11 @@ socket.on('salaUnida', ({ roomId: idSala, jugadores, creadorId }) => {
   document.getElementById('salaCodigo').textContent = idSala;
 
   actualizarListaJugadores(jugadores);
-console.log('socket.id', socket.id, 'creadorId', creadorId);
-  if (soyCreador) {
-  mostrarBotonIniciar();
-}
-});
+  console.log('socket.id', socket.id, 'creadorId', creadorId);
+      if (soyCreador) {
+        mostrarBotonIniciar();
+      }
+  });
 
 // Actualizar jugadores cuando alguien se une
 socket.on('actualizarJugadores', (jugadores) => {
@@ -196,16 +248,47 @@ socket.on('actualizarJugadores', (jugadores) => {
 
 
 
-function mostrarBotonIniciar() {
-  if (soyCreador && !document.getElementById('iniciarBtn')) {
-    const btn = document.createElement('button');
+
+
+function mostrarBotonIniciar(texto = 'Iniciar Juego') {
+  console.log('mostrarBotonIniciar llamado con texto:', texto);
+
+  const container = document.getElementById('botonIniciarContainer');
+  if (!container) {
+    console.warn('No se encontró el contenedor #botonIniciarContainer');
+    return;
+  }
+
+  let btn = document.getElementById('iniciarBtn');
+
+  if (!btn) {
+    btn = document.createElement('button');
     btn.id = 'iniciarBtn';
-    btn.innerText = 'Iniciar Juego';
     btn.onclick = () => {
+      console.log('Se hizo clic en iniciar juego');
       socket.emit('iniciarJuego', roomId);
     };
-    document.getElementById('salaActual').appendChild(btn); // mejor en la sección de la sala
+    container.appendChild(btn);
   }
+
+  btn.innerText = texto;
+
+  // 🔥 FORZAR VISIBILIDAD
+  btn.style.removeProperty('display');
+  btn.style.display = 'inline-block';
+  btn.style.visibility = 'visible';
+  btn.style.opacity = '1';
+
+  Object.assign(btn.style, {
+    marginTop: '10px',
+    padding: '10px 20px',
+    fontSize: '16px',
+    backgroundColor: '#4CAF50',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer'
+  });
 }
 
 // Utilidad para actualizar lista
@@ -217,6 +300,32 @@ function actualizarListaJugadores(jugadores) {
     li.textContent = j;
     ul.appendChild(li);
   });
+}
+
+function iniciarCuentaRegresiva(callback) {
+  const cuentaDiv = document.getElementById('cuentaRegresiva');
+  const formulario = document.getElementById('formulario');
+  let segundos = 3;
+
+  formulario.style.display = 'none';
+  cuentaDiv.style.display = 'block';
+  cuentaDiv.textContent = segundos;
+
+  const intervalo = setInterval(() => {
+    segundos--;
+    if (segundos > 0) {
+      cuentaDiv.textContent = segundos;
+    } else {
+      clearInterval(intervalo);
+      cuentaDiv.textContent = '¡YA!';
+      setTimeout(() => {
+        cuentaDiv.textContent = '';
+        cuentaDiv.style.display = 'none';
+        formulario.style.display = 'block';
+        if (callback) callback();
+      }, 1000);
+    }
+  }, 1000);
 }
 
 
