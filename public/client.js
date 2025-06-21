@@ -4,6 +4,8 @@ let letra = '';
 let nombreJugador = '';
 let miId = '';
 let soyCreador = false;
+let yaRespondi = false;
+
 
 // Guardar mi socket.id cuando conecto
 socket.on('connect', () => {
@@ -66,6 +68,7 @@ socket.on('salaCreada', (id) => {
 
 // Jugadores listos → empieza el juego
 socket.on('jugadoresListos', (data) => {
+  yaRespondi = false;
   letra = data.letra;
   document.getElementById('menu').style.display = 'none';
   document.getElementById('juego').style.display = 'block';
@@ -89,6 +92,10 @@ socket.on('esperandoJugadores', () => {
 // Enviar respuestas
 document.getElementById('formulario').addEventListener('submit', (e) => {
   e.preventDefault();
+
+  if (yaRespondi) return;
+  yaRespondi = true;
+
   const form = e.target;
   const respuestas = {
     nombre: form.nombre.value,
@@ -97,8 +104,30 @@ document.getElementById('formulario').addEventListener('submit', (e) => {
     pais: form.pais.value
   };
   socket.emit('respuestas', { roomId, respuestas });
+
+  // 🔥 Esta línea forzará el final del juego para todos
+  socket.emit('forzarFinJuego', roomId);
+
   form.reset(); 
   document.getElementById('esperando').textContent = 'Esperando al resto de jugadores...';
+});
+
+
+socket.on('forzarEnvio', () => {
+  if (yaRespondi) return;
+
+  const form = document.getElementById('formulario');
+  const respuestas = {
+    nombre: form.nombre.value,
+    animal: form.animal.value,
+    fruta: form.fruta.value,
+    pais: form.pais.value
+  };
+
+  socket.emit('respuestas', { roomId, respuestas });
+  yaRespondi = true;
+  form.reset();
+  document.getElementById('esperando').textContent = '¡Se terminó el juego! Esperando resultados...';
 });
 
 // Mostrar resultados

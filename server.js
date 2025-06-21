@@ -80,35 +80,45 @@ io.on('connection', (socket) => {
   });
 
   socket.on('respuestas', ({ roomId, respuestas }) => {
+  const room = rooms[roomId];
+  if (!room) return;
 
-    
+  room.respuestas[socket.id] = respuestas;
 
-    const room = rooms[roomId];
-    if (!room) return;
+  // 💡 Si es el primer jugador en responder, forzar a los demás
+  if (Object.keys(room.respuestas).length === 1) {
+    socket.to(roomId).emit('forzarEnvio');
+  }
 
-    room.respuestas[socket.id] = respuestas;
+  // Si todos respondieron, mostrar resultados
+  if (Object.keys(room.respuestas).length === room.jugadores.length) {
+    const resultado = compararRespuestasMulti(room.jugadores, room.respuestas, room.letra);
 
-    if (Object.keys(room.respuestas).length === room.jugadores.length) {
-      // const resultado = compararRespuestasMulti(room.jugadores, room.respuestas, room.letra);
-      // io.to(roomId).emit('mostrarResultados', resultado);
+    // Crear mapa de id a nombre
+    const nombresJugadores = {};
+    room.jugadores.forEach(id => {
+      nombresJugadores[id] = io.sockets.sockets.get(id)?.nombre || 'Sin nombre';
+    });
+
+    io.to(roomId).emit('mostrarResultados', {
+      ...resultado,
+      nombresJugadores
+    });
+
+    // Podés limpiar la sala si querés para la siguiente ronda
+     room.jugando = false;
+     room.respuestas = {};
+  }
+});
 
 
-      const resultado = compararRespuestasMulti(room.jugadores, room.respuestas, room.letra);
+socket.on('forzarFinJuego', (roomId) => {
+  const room = rooms[roomId];
+  if (!room) return;
 
-      // Crear mapa de id a nombre
-      const nombresJugadores = {};
-      room.jugadores.forEach(id => {
-        nombresJugadores[id] = io.sockets.sockets.get(id)?.nombre || 'Sin nombre';
-      });
-
-      io.to(roomId).emit('mostrarResultados', {
-        ...resultado,
-        nombresJugadores
-      });
-      // Reiniciar para próxima ronda
-      
-    }
-  });
+  // Enviar a todos los jugadores el evento para que envíen sus respuestas
+  io.to(roomId).emit('forzarEnvio');
+});
 
   socket.on('listarSalas', () => {
     const resumenSalas = Object.entries(rooms).map(([id, data]) => ({
@@ -119,6 +129,23 @@ io.on('connection', (socket) => {
     }));
     socket.emit('salasDisponibles', resumenSalas);
   });
+
+  socket.on('forzarEnvio', () => {
+  if (yaRespondi) return;
+  yaRespondi = true;
+
+  const form = document.getElementById('formulario');
+  const respuestas = {
+    nombre: form.nombre.value.trim(),
+    animal: form.animal.value.trim(),
+    fruta: form.fruta.value.trim(),
+    pais: form.pais.value.trim()
+  };
+
+  socket.emit('respuestas', { roomId, respuestas });
+  form.reset();
+  document.getElementById('esperando').textContent = '¡Tiempo terminado! Se enviaron tus respuestas.';
+});
 
   socket.on('disconnect', () => {
     console.log(`Socket ${socket.id} desconectado`);
